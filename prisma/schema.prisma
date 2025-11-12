@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  user_id        BigInt @id 
+  name           String?
+  email          String?
+  calorie_target Int?
+  latitude       Decimal? @db.Decimal(9,6)
+  longitude      Decimal? @db.Decimal(9,6)
+  user_log       user_log[]
+}
+
+model restaurants {
+  r_id        BigInt @id
+  name        String?
+  latitude    Decimal? @db.Decimal(9,6)
+  longitude   Decimal? @db.Decimal(9,6)
+  rating      Float?
+  dishes      dishes[]
+  rec_origins recommendation[] @relation("orig_restaurant")
+  rec_alts    recommendation[] @relation("alt_restaurant")
+  logs        user_log[]
+  restaurant_platforms restaurant_platforms[]
+}
+
+model platforms {
+  platform_id BigInt @id
+  name        String?
+  url         String?
+  logo_url    String?
+  restaurant_platforms restaurant_platforms[]
+}
+
+model restaurant_platforms {
+  r_id          BigInt
+  platform_id   BigInt
+  platform_url  String?
+  delivery_fee  Int?
+  availability  Boolean? @default(true)
+
+  restaurants restaurants @relation(fields: [r_id], references: [r_id])
+  platforms   platforms   @relation(fields: [platform_id], references: [platform_id])
+
+  @@id([r_id, platform_id])
+}
+
+model dishes {
+  dish_id     BigInt @id
+  dish_name   String?
+  calories    Int?
+  protein_g   Float?
+  carbs_g     Float?
+  fats_g      Float?
+  price       Int?
+  r_id        BigInt
+  restaurants restaurants @relation(fields: [r_id], references: [r_id])
+  rec_origins recommendation[] @relation("orig_dish")
+  rec_alts    recommendation[] @relation("alt_dish")
+  logs        user_log[]
+  savory      Float?
+  salty       Float?
+  sweet       Float?
+  crunchy     Float?
+  nutty       Float?
+  chocolatey  Float?
+  fried       Float?
+  crispy      Float?
+  hot         Float?
+  cold        Float?
+  buttery     Float?
+  rich        Float?
+  creamy      Float?
+  spicy       Float?
+  meaty       Float?
+  juicy       Float?
+}
+
+model recommendation {
+  rec_id          BigInt @id @default(autoincrement())
+  dish_id_original BigInt?
+  r_id_original    BigInt?
+  dish_id_alt      BigInt?
+  r_id_alt         BigInt?
+  taste_score      Float?
+  alt_price        Int?
+  alt_calories     Int?
+  calorie_diff     Int?
+
+  orig_dish dishes?       @relation("orig_dish", fields: [dish_id_original], references: [dish_id])
+  alt_dish  dishes?       @relation("alt_dish", fields: [dish_id_alt], references: [dish_id])
+  orig_restaurant restaurants? @relation("orig_restaurant", fields: [r_id_original], references: [r_id])
+  alt_restaurant  restaurants? @relation("alt_restaurant", fields: [r_id_alt], references: [r_id])
+}
+
+model user_log {
+  log_id        BigInt @id @default(autoincrement())
+  user_id       BigInt
+  dish_id       BigInt
+  r_id          BigInt
+  log_date      DateTime?
+  quantity      Float?
+  total_calories Float?
+
+  users       users       @relation(fields: [user_id], references: [user_id])
+  dishes      dishes      @relation(fields: [dish_id], references: [dish_id])
+  restaurants restaurants @relation(fields: [r_id], references: [r_id])
+}
